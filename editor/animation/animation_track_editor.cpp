@@ -649,9 +649,7 @@ void AnimationTrackKeyEdit::_get_property_list(List<PropertyInfo> *p_list) const
 			if (root_path) {
 				AnimationPlayer *ap = Object::cast_to<AnimationPlayer>(root_path->get_node_or_null(animation->track_get_path(track)));
 				if (ap) {
-					List<StringName> anims;
-					ap->get_animation_list(&anims);
-					for (const StringName &E : anims) {
+					for (const StringName &E : ap->get_sorted_animation_list()) {
 						if (!animations.is_empty()) {
 							animations += ",";
 						}
@@ -1255,9 +1253,7 @@ void AnimationMultiTrackKeyEdit::_get_property_list(List<PropertyInfo> *p_list) 
 				if (root_path) {
 					AnimationPlayer *ap = Object::cast_to<AnimationPlayer>(root_path->get_node_or_null(animation->track_get_path(first_track)));
 					if (ap) {
-						List<StringName> anims;
-						ap->get_animation_list(&anims);
-						for (const StringName &anim : anims) {
+						for (const StringName &anim : ap->get_sorted_animation_list()) {
 							if (!animations.is_empty()) {
 								animations += ",";
 							}
@@ -3255,6 +3251,7 @@ void AnimationTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 				}
 
 				bool selected = _try_select_at_ui_pos(pos, mb->is_command_or_control_pressed() || mb->is_shift_pressed(), false);
+				moving_selection_attempt = false;
 
 				menu->clear();
 				if (animation->track_get_type(track) == Animation::TYPE_METHOD) {
@@ -3930,6 +3927,25 @@ void AnimationTrackEditGroup::_notification(int p_what) {
 				const Color accent = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
 				draw_line(Point2(px, 0), Point2(px, get_size().height), accent, Math::round(2 * EDSCALE));
 			}
+
+			if (is_group_folded) {
+				for (const AnimationTrackEdit *track_edit : track_edits) {
+					const Ref<Texture2D> &key_type_icon = track_edit->get_key_type_icon();
+					int track = track_edit->get_track();
+					for (int i = 0; i < editor->get_current_animation()->track_get_key_count(track); ++i) {
+						float key_time_offset = editor->get_current_animation()->track_get_key_time(track, i) - timeline->get_value();
+						int key_screen_pos = int(key_time_offset * timeline->get_zoom_scale() + limit);
+						int key_limit_left = timeline->get_name_limit();
+						int key_limit_right = get_size().width - timeline->get_buttons_width();
+						if (key_screen_pos >= key_limit_left && key_screen_pos <= key_limit_right) {
+							draw_texture(
+									key_type_icon,
+									Vector2(key_screen_pos - key_type_icon->get_width() / 2, (get_size().height - key_type_icon->get_height()) / 2),
+									Color(1, 1, 1, 0.3));
+						}
+					}
+				}
+			}
 		} break;
 
 		case NOTIFICATION_MOUSE_EXIT: {
@@ -4290,10 +4306,8 @@ void AnimationTrackEditor::_animation_track_remove_request(int p_track, Ref<Anim
 					if (reset->track_get_path(i) == p_from_animation->track_get_path(p_track)) {
 						// Check if the reset track isn't used by other animations.
 						bool used = false;
-						List<StringName> animation_list;
-						player->get_animation_list(&animation_list);
 
-						for (const StringName &anim_name : animation_list) {
+						for (const StringName &anim_name : player->get_sorted_animation_list()) {
 							Ref<Animation> anim = player->get_animation(anim_name);
 							if (anim == p_from_animation || anim == reset) {
 								continue;
@@ -7716,9 +7730,7 @@ void AnimationTrackEditor::_edit_menu_pressed(int p_option) {
 		} break;
 		case EDIT_CLEAN_UP_ANIMATION_CONFIRM: {
 			if (cleanup_all->is_pressed()) {
-				List<StringName> names;
-				AnimationPlayerEditor::get_singleton()->get_player()->get_animation_list(&names);
-				for (const StringName &E : names) {
+				for (const StringName &E : AnimationPlayerEditor::get_singleton()->get_player()->get_sorted_animation_list()) {
 					_cleanup_animation(AnimationPlayerEditor::get_singleton()->get_player()->get_animation(E));
 				}
 			} else {
