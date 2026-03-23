@@ -55,7 +55,6 @@
 #include "editor/themes/editor_theme_manager.h"
 #include "editor/translations/editor_translation.h"
 #include "main/main.h"
-#include "modules/regex/regex.h"
 #include "scene/gui/color_picker.h"
 #include "scene/gui/file_dialog.h"
 #include "scene/main/node.h"
@@ -63,6 +62,8 @@
 #include "scene/main/window.h"
 #include "scene/resources/animation.h"
 #include "servers/display/display_server.h"
+
+#include "modules/regex/regex.h"
 
 // PRIVATE METHODS
 
@@ -715,6 +716,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	_initial_set("docks/filesystem/textfile_extensions", "txt,md,cfg,ini,log,json,yml,yaml,toml,xml");
 	_initial_set("docks/filesystem/other_file_extensions", "ico,icns");
 	_initial_set("docks/filesystem/automatically_open_created_scripts", true);
+	_initial_set("docks/filesystem/ask_before_moving_files", true);
 
 	// Property editor
 	EDITOR_SETTING(Variant::FLOAT, PROPERTY_HINT_RANGE, "docks/property_editor/auto_refresh_interval", 0.2, "0.01,1,0.001"); // Update 5 times per second by default.

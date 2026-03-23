@@ -222,6 +222,7 @@ private:
 	Button *translation_preview_button = nullptr;
 	Button *follow_mode = nullptr;
 	CheckBox *preview_camera = nullptr;
+	CheckBox *pilot_camera = nullptr;
 	SubViewportContainer *subviewport_container = nullptr;
 
 	MenuButton *view_display_menu = nullptr;
@@ -258,7 +259,7 @@ private:
 	ViewportNavigationControl *position_control = nullptr;
 	ViewportNavigationControl *look_control = nullptr;
 	ViewportRotationControl *rotation_control = nullptr;
-	Gradient *frame_time_gradient = nullptr;
+	Ref<Gradient> frame_time_gradient;
 	PanelContainer *frame_time_panel = nullptr;
 	VBoxContainer *frame_time_vbox = nullptr;
 	Label *cpu_time_label = nullptr;
@@ -426,13 +427,16 @@ private:
 	bool previewing_camera = false;
 	bool previewing_cinema = false;
 	int times_focused_consecutively = 0;
+	bool pilot_preview_enabled = false;
 	bool _is_node_locked(const Node *p_node) const;
 	void _preview_exited_scene();
 	void _preview_camera_property_changed();
+	void _sync_cursor_from_transform(const Transform3D &p_transform);
 	void _update_centered_labels();
 	void _disable_follow_mode();
 	void _reset_follow_mode_count();
 	void _toggle_camera_preview(bool);
+	void _toggle_pilot_preview(bool);
 	void _toggle_cinema_preview(bool);
 	void _init_gizmo_instance(int p_idx);
 	void _finish_gizmo_instances();
@@ -495,6 +499,7 @@ public:
 	void update_transform_gizmo_highlight();
 
 	void set_can_preview(Camera3D *p_preview);
+	void switch_preview_camera(Camera3D *p_new_camera);
 	void set_state(const Dictionary &p_state);
 	Dictionary get_state() const;
 	void reset();
@@ -723,6 +728,8 @@ private:
 		MENU_UNGROUP_SELECTED,
 		MENU_SNAP_TO_FLOOR,
 		MENU_RULER,
+		MENU_VERTEX_SNAP_BASE_VERTEX,
+		MENU_VERTEX_SNAP_BASE_ORIGIN,
 	};
 
 	Button *tool_button[TOOL_MAX];
@@ -740,6 +747,7 @@ private:
 
 	bool snap_enabled = false;
 	bool snap_key_enabled = false;
+	bool vertex_snap_origin_mode = false;
 	EditorSpinSlider *snap_translate = nullptr;
 	EditorSpinSlider *snap_rotate = nullptr;
 	EditorSpinSlider *snap_scale = nullptr;
@@ -758,6 +766,7 @@ private:
 
 	void _snap_changed();
 	void _snap_update();
+	void _update_vertex_snap_tooltips();
 	void _xform_dialog_action();
 	void _menu_item_pressed(int p_option);
 	void _menu_item_toggled(bool pressed, int p_option);
@@ -924,6 +933,7 @@ public:
 	void set_local_coords_enabled(bool on) const { tool_option_button[Node3DEditor::TOOL_OPT_LOCAL_COORDS]->set_pressed(on); }
 	bool is_preserve_children_transform_enabled() const { return tool_option_button[Node3DEditor::TOOL_OPT_PRESERVE_CHILDREN_TRANSFORM]->is_pressed(); }
 	bool is_snap_enabled() const { return snap_enabled ^ snap_key_enabled; }
+	bool is_vertex_snap_origin_mode() const { return vertex_snap_origin_mode; }
 	real_t get_translate_snap() const;
 	real_t get_rotate_snap() const;
 	real_t get_scale_snap() const;
