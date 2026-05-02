@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<class name="ProjectSettings" inherits="Object" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+<class name="ProjectSettings" inherits="Object" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
 	<brief_description>
 		Stores globally-accessible variables.
 	</brief_description>
@@ -556,6 +556,9 @@
 		<member name="debug/gdscript/warnings/confusable_local_usage" type="int" setter="" getter="" default="1">
 			When set to [b]Warn[/b] or [b]Error[/b], produces a warning or an error respectively when an identifier that will be shadowed below in the block is used.
 		</member>
+		<member name="debug/gdscript/warnings/confusable_temporary_modification" type="int" setter="" getter="" default="1">
+			When set to [b]Warn[/b] or [b]Error[/b], produces a warning or an error respectively when a built-in property of type [code]Packed*Array[/code] is modified using a complex assignment chain or a non-[code]const[/code] method call. In this case, you are only modifying a temporary value, and the property's value remains unchanged.
+		</member>
 		<member name="debug/gdscript/warnings/deprecated_keyword" type="int" setter="" getter="" default="1">
 			When set to [b]Warn[/b] or [b]Error[/b], produces a warning or an error respectively when deprecated keywords are used.
 			[b]Note:[/b] There are currently no deprecated keywords, so this warning is never produced.
@@ -1079,12 +1082,12 @@
 			[code]"keep"[/code]: Keep aspect ratio when stretching the screen. This means that the viewport retains its original size regardless of the screen resolution, and black bars will be added to the top/bottom of the screen ("letterboxing") or the sides ("pillarboxing").
 			[code]"keep_width"[/code]: Keep aspect ratio when stretching the screen. If the screen is wider than the base size, black bars are added at the left and right (pillarboxing). But if the screen is taller than the base resolution, the viewport will be grown in the vertical direction (and more content will be visible at the bottom). You can also think of this as "Expand Vertically".
 			[code]"keep_height"[/code]: Keep aspect ratio when stretching the screen. If the screen is taller than the base size, black bars are added at the top and bottom (letterboxing). But if the screen is wider than the base resolution, the viewport will be grown in the horizontal direction (and more content will be visible to the right). You can also think of this as "Expand Horizontally".
-			[code]"expand"[/code]: Keep aspect ratio when stretching the screen, but keep neither the base width nor height. Depending on the screen aspect ratio, the viewport will either be larger in the horizontal direction (if the screen is wider than the base size) or in the vertical direction (if the screen is taller than the original size).
+			[code]"expand"[/code]: Keep aspect ratio when stretching the screen, but keep neither the base width nor height. Depending on the screen aspect ratio, the viewport will either be larger in the horizontal direction (if the screen is wider than the base size) or in the vertical direction (if the screen is taller than the original size). This is the default for projects created starting in Godot 4.7.
 		</member>
 		<member name="display/window/stretch/mode" type="String" setter="" getter="" default="&quot;disabled&quot;" keywords="disabled, canvas_items, viewport">
 			Defines how the base size is stretched to fit the resolution of the window or screen.
 			[code]"disabled"[/code]: No stretching happens. One unit in the scene corresponds to one pixel on the screen. In this mode, [member display/window/stretch/aspect] has no effect. Recommended for non-game applications.
-			[code]"canvas_items"[/code]: The base size specified in width and height in the project settings is stretched to cover the whole screen (taking [member display/window/stretch/aspect] into account). This means that everything is rendered directly at the target resolution. 3D is unaffected, while in 2D, there is no longer a 1:1 correspondence between sprite pixels and screen pixels, which may result in scaling artifacts. Recommended for most games that don't use a pixel art aesthetic, although it is possible to use this stretch mode for pixel art games too (especially in 3D).
+			[code]"canvas_items"[/code]: The base size specified in width and height in the project settings is stretched to cover the whole screen (taking [member display/window/stretch/aspect] into account). This means that everything is rendered directly at the target resolution. 3D is unaffected, while in 2D, there is no longer a 1:1 correspondence between sprite pixels and screen pixels, which may result in scaling artifacts. Recommended for most games that don't use a pixel art aesthetic, although it is possible to use this stretch mode for pixel art games too (especially in 3D). This is the default for projects created starting in Godot 4.7.
 			[code]"viewport"[/code]: The size of the root [Viewport] is set precisely to the base size specified in the Project Settings' Display section. The scene is rendered to this viewport first. Finally, this viewport is scaled to fit the screen (taking [member display/window/stretch/aspect] into account). Recommended for games that use a pixel art aesthetic.
 		</member>
 		<member name="display/window/stretch/scale" type="float" setter="" getter="" default="1.0">
@@ -3413,6 +3416,7 @@
 		</member>
 		<member name="rendering/scaling_3d/scale" type="float" setter="" getter="" default="1.0">
 			Scales the 3D render buffer based on the viewport size uses an image filter specified in [member rendering/scaling_3d/mode] to scale the output image to the full viewport size. Values lower than [code]1.0[/code] can be used to speed up 3D rendering at the cost of quality (undersampling). Values greater than [code]1.0[/code] are only valid for bilinear mode and can be used to improve 3D rendering quality at a high performance cost (supersampling). See also [member rendering/anti_aliasing/quality/msaa_3d] for multi-sample antialiasing, which is significantly cheaper but only smooths the edges of polygons.
+			[b]Note:[/b] When using the [b]Nearest[/b] scaling mode, to avoid uneven pixel scaling, it's highly recommended to use a value equal to an integer divisor with a dividend of [code]1[/code]. For example, it's best to use a scale of [code]0.5[/code] (1/2), [code]0.3333[/code] (1/3), [code]0.25[/code] (1/4), [code]0.2[/code] (1/5), and so on.
 		</member>
 		<member name="rendering/shader_compiler/shader_cache/compress" type="bool" setter="" getter="" default="true">
 		</member>
@@ -3627,11 +3631,14 @@
 		<member name="xr/openxr/foveation_dynamic" type="bool" setter="" getter="" default="false">
 			If [code]true[/code] and foveation is supported, will automatically adjust foveation level based on framerate up to the level set on [member xr/openxr/foveation_level].
 		</member>
+		<member name="xr/openxr/foveation_eye_tracked" type="bool" setter="" getter="" default="true">
+			If [code]true[/code] and foveation level is set to anything other than "Disabled", eye-tracked foveation will be used, so long as it's supported by the headset.
+		</member>
 		<member name="xr/openxr/foveation_level" type="int" setter="" getter="" default="&quot;0&quot;">
 			Applied foveation level if supported.
 			[b]Note:[/b] On platforms other than Android, if [member rendering/anti_aliasing/quality/msaa_3d] is enabled, this feature will be disabled.
 		</member>
-		<member name="xr/openxr/foveation_with_subsampled_images" type="bool" setter="" getter="" default="false">
+		<member name="xr/openxr/foveation_with_subsampled_images" type="bool" setter="" getter="" default="true">
 			If [code]true[/code] and foveation is also enabled, subsampled images will be used on Vulkan. This can improve the performance gain from foveated rendering, especially when using high foveation levels.
 			[b]Note:[/b]: Using subsampled images is incompatible with many screen-space rendering features or post-processing effects like FXAA or glow. If any such effects are enabled, subsampled images will automatically be disabled and a warning shown in the log.
 		</member>

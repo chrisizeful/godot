@@ -30,6 +30,7 @@
 
 #include "mesh_library_editor_plugin.h"
 
+#include "core/io/resource_loader.h"
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "editor/docks/editor_dock_manager.h"
@@ -160,6 +161,7 @@ void MeshLibraryEditor::edit(const Ref<MeshLibrary> &p_mesh_library) {
 	}
 
 	selected_item = -1;
+	inspector->edit(nullptr);
 
 	mesh_library = p_mesh_library;
 	if (mesh_library.is_valid()) {
@@ -234,22 +236,24 @@ void MeshLibraryEditor::_update_mesh_items(bool p_reselect, Ref<MeshLibrary> p_l
 			continue;
 		}
 
-		if (name.is_empty()) {
-			name = "#" + itos(id);
-		}
-
 		mesh_items->add_item("");
 
 		Ref<Texture2D> preview = mesh_library->get_item_preview(id);
 		if (preview.is_valid()) {
 			mesh_items->set_item_icon(item, preview);
-			mesh_items->set_item_tooltip(item, name);
 		} else {
 			Ref<Mesh> mesh = mesh_library->get_item_mesh(id);
 			if (mesh.is_valid()) {
 				// Fallback to the item's mesh preview.
 				EditorResourcePreview::get_singleton()->queue_edited_resource_preview(mesh, callable_mp(this, &MeshLibraryEditor::_update_resource_preview).bind(item));
 			}
+		}
+
+		String idx = "#" + itos(id);
+		if (name.is_empty()) {
+			name = idx;
+		} else {
+			mesh_items->set_item_tooltip(item, name + "\n" + idx);
 		}
 
 		mesh_items->set_item_text(item, name);
@@ -719,7 +723,7 @@ MeshLibraryEditor::MeshLibraryEditor() {
 	mesh_items->set_theme_type_variation("ItemListSecondary");
 	mesh_items->set_h_size_flags(SIZE_EXPAND_FILL);
 	mesh_items->set_custom_minimum_size(Size2(100 * EDSCALE, 0));
-	mesh_items->set_auto_translate(false);
+	mesh_items->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	item_split->add_child(mesh_items);
 	mesh_items->connect(SceneStringName(item_selected), callable_mp(this, &MeshLibraryEditor::_mesh_items_cbk));
 	mesh_items->connect(SceneStringName(gui_input), callable_mp(this, &MeshLibraryEditor::_mesh_items_input));
@@ -793,6 +797,10 @@ void MeshLibraryEditorPlugin::make_visible(bool p_visible) {
 	} else {
 		mesh_library_editor->close();
 	}
+}
+
+void MeshLibraryEditorPlugin::open_editor() {
+	mesh_library_editor->open();
 }
 
 MeshLibraryEditorPlugin::MeshLibraryEditorPlugin() {

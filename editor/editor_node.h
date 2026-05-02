@@ -217,10 +217,11 @@ public:
 
 		// Non-menu options.
 		SCENE_TAB_CLOSE,
-		SCENE_TAB_SET_AS_MAIN_SCENE,
+		SCENE_TAB_SAVE_SCENE,
+		SCENE_TAB_SAVE_AS_AND_RUN,
+		SCENE_TAB_SAVE_AS_MAIN_SCENE,
 		SAVE_AND_RUN,
 		SAVE_AND_RUN_MAIN_SCENE,
-		SAVE_AND_SET_MAIN_SCENE,
 		RESOURCE_SAVE,
 		RESOURCE_SAVE_AS,
 		SETTINGS_PICK_MAIN_SCENE,
@@ -825,7 +826,7 @@ public:
 	void save_resource(const Ref<Resource> &p_resource);
 	void save_resource_as(const Ref<Resource> &p_resource, const String &p_at_path = String());
 	bool is_resource_internal_to_scene(Ref<Resource> p_resource);
-	void gather_resources(const Variant &p_variant, List<Ref<Resource>> &r_list, bool p_subresources = false, bool p_allow_external = false);
+	void gather_resources(const Variant &p_variant, List<Ref<Resource>> &r_list, HashSet<Object *> &r_scanned_objects, bool p_subresources = false, bool p_allow_external = false);
 	void update_resource_count(Node *p_node, bool p_remove = false);
 	void update_node_reference(const Variant &p_value, Node *p_node, bool p_remove = false);
 	void clear_node_reference(Ref<Resource> p_res);

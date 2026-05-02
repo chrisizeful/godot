@@ -42,6 +42,7 @@
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/gui/editor_zoom_widget.h"
 #include "editor/gui/filter_line_edit.h"
+#include "editor/inspector/editor_resource_preview.h"
 #include "editor/scene/3d/mesh_library_editor_plugin.h"
 #include "editor/scene/3d/node_3d_editor_plugin.h"
 #include "editor/settings/editor_command_palette.h"
@@ -1138,7 +1139,14 @@ void GridMapEditor::update_palette() {
 		if (preview.is_valid()) {
 			mesh_library_palette->set_item_icon(item, preview);
 			mesh_library_palette->set_item_tooltip(item, name);
+		} else {
+			Ref<Mesh> mesh = mesh_library->get_item_mesh(id);
+			if (mesh.is_valid()) {
+				// Fallback to the item's mesh preview.
+				EditorResourcePreview::get_singleton()->queue_edited_resource_preview(mesh, callable_mp(this, &GridMapEditor::_update_resource_preview).bind(item));
+			}
 		}
+
 		mesh_library_palette->set_item_text(item, name);
 		mesh_library_palette->set_item_metadata(item, id);
 
@@ -1147,6 +1155,12 @@ void GridMapEditor::update_palette() {
 		}
 
 		item++;
+	}
+}
+
+void GridMapEditor::_update_resource_preview(const String &p_path, const Ref<Texture2D> &p_preview, const Ref<Texture2D> &p_small_preview, int p_idx) {
+	if (p_idx < mesh_library_palette->get_item_count()) {
+		mesh_library_palette->set_item_icon(p_idx, p_preview);
 	}
 }
 
@@ -1169,7 +1183,7 @@ void GridMapEditor::_update_mesh_library() {
 
 		if (mesh_library_editor_plugin) {
 			mesh_library_editor_plugin->edit(*mesh_library);
-			mesh_library_editor_plugin->make_visible(true);
+			mesh_library_editor_plugin->open_editor();
 		}
 	} else if (mesh_library_editor_plugin) {
 		mesh_library_editor_plugin->edit(nullptr);
@@ -1324,7 +1338,7 @@ void GridMapEditor::_update_theme() {
 
 void GridMapEditor::_notification(int p_what) {
 	switch (p_what) {
-		case NOTIFICATION_ENTER_TREE: {
+		case NOTIFICATION_READY: {
 			const RID scenario = get_tree()->get_root()->get_world_3d()->get_scenario();
 
 			for (int i = 0; i < 3; i++) {
@@ -1345,28 +1359,6 @@ void GridMapEditor::_notification(int p_what) {
 
 			_update_selection_transform();
 			_update_paste_indicator();
-			_update_theme();
-		} break;
-
-		case NOTIFICATION_EXIT_TREE: {
-			_cancel_pending_move();
-			_clear_clipboard_data();
-
-			for (int i = 0; i < 3; i++) {
-				RS::get_singleton()->free_rid(grid_instance[i]);
-				RS::get_singleton()->free_rid(grid[i]);
-				grid_instance[i] = RID();
-				grid[i] = RID();
-				RenderingServer::get_singleton()->free_rid(selection_level_instance[i]);
-			}
-
-			RenderingServer::get_singleton()->free_rid(cursor_instance);
-			RenderingServer::get_singleton()->free_rid(selection_instance);
-			RenderingServer::get_singleton()->free_rid(paste_instance);
-			cursor_instance = RID();
-			cursor_visible = false;
-			selection_instance = RID();
-			paste_instance = RID();
 		} break;
 
 		case NOTIFICATION_PROCESS: {
