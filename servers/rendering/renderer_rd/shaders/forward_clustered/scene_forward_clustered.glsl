@@ -2680,6 +2680,9 @@ void fragment_shader(in SceneData scene_data) {
 					binormal,
 					tangent, anisotropy,
 #endif
+#ifdef LIGHT_SOURCE_INFO
+   					i, //light index
+#endif
 					diffuse_light,
 					direct_specular_light);
 		}
