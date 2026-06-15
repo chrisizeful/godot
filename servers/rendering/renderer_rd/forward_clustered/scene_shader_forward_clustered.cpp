@@ -345,8 +345,8 @@ void SceneShaderForwardClustered::ShaderData::_create_pipeline(PipelineKey p_pip
 	RD::PipelineColorBlendState blend_state_color_blend;
 	blend_state_color_blend.attachments = { blend_attachment, RD::PipelineColorBlendState::Attachment(), RD::PipelineColorBlendState::Attachment() };
 	RD::PipelineColorBlendState blend_state_color_opaque = RD::PipelineColorBlendState::create_disabled(3);
-	RD::PipelineColorBlendState blend_state_depth_normal_roughness = RD::PipelineColorBlendState::create_disabled(1);
-	RD::PipelineColorBlendState blend_state_depth_normal_roughness_giprobe = RD::PipelineColorBlendState::create_disabled(2);
+	RD::PipelineColorBlendState blend_state_depth_normal_roughness = RD::PipelineColorBlendState::create_disabled(2); // normal_roughness + outline_data
+	RD::PipelineColorBlendState blend_state_depth_normal_roughness_giprobe = RD::PipelineColorBlendState::create_disabled(3); // normal_roughness + outline_data + voxelgi
 
 	RD::PipelineDepthStencilState depth_stencil_state;
 
@@ -778,6 +778,7 @@ void SceneShaderForwardClustered::init(const String p_defines) {
 		actions.renames["CUSTOM1"] = "custom1_attrib";
 		actions.renames["CUSTOM2"] = "custom2_attrib";
 		actions.renames["CUSTOM3"] = "custom3_attrib";
+		actions.renames["OUTLINE_DATA"] = "outline_data_highp";
 		actions.renames["LIGHT_VERTEX"] = "light_vertex";
 		actions.renames["LIGHT_INDEX"] = "light_index";
 
@@ -825,6 +826,7 @@ void SceneShaderForwardClustered::init(const String p_defines) {
 		actions.usage_defines["CUSTOM1"] = "#define CUSTOM1_USED\n";
 		actions.usage_defines["CUSTOM2"] = "#define CUSTOM2_USED\n";
 		actions.usage_defines["CUSTOM3"] = "#define CUSTOM3_USED\n";
+		actions.usage_defines["OUTLINE_DATA"] = "#define OUTLINE_DATA_USED\n";
 		actions.usage_defines["NORMAL_MAP"] = "#define NORMAL_MAP_USED\n";
 		actions.usage_defines["NORMAL_MAP_DEPTH"] = "@NORMAL_MAP";
 		actions.usage_defines["BENT_NORMAL_MAP"] = "#define BENT_NORMAL_MAP_USED\n";

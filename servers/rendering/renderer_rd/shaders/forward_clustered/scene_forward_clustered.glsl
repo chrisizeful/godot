@@ -1048,9 +1048,10 @@ layout(location = 4) out float depth_output_buffer;
 
 #ifdef MODE_RENDER_NORMAL_ROUGHNESS
 layout(location = 0) out vec4 normal_roughness_output_buffer;
+layout(location = 1) out vec4 outline_data_output_buffer;
 
 #ifdef MODE_RENDER_VOXEL_GI
-layout(location = 1) out uvec2 voxel_gi_buffer;
+layout(location = 2) out uvec2 voxel_gi_buffer;
 #endif
 
 #endif //MODE_RENDER_NORMAL
@@ -1230,6 +1231,7 @@ void fragment_shader(in SceneData scene_data) {
 	float specular = 0.5;
 	vec3 emission = vec3(0.0);
 	float roughness_highp = 1.0;
+	vec4 outline_data_highp = vec4(0.0);
 	float rim = 0.0;
 	float rim_tint = 0.0;
 	float clearcoat = 0.0;
@@ -3029,6 +3031,8 @@ void fragment_shader(in SceneData scene_data) {
 		normal_roughness_output_buffer.w = 1.0 - normal_roughness_output_buffer.w;
 	}
 	normal_roughness_output_buffer.w = normal_roughness_output_buffer.w;
+
+	outline_data_output_buffer = outline_data_highp;
 
 #ifdef MODE_RENDER_VOXEL_GI
 	if (bool(instances.data[instance_index].flags & INSTANCE_FLAGS_USE_VOXEL_GI)) { // process voxel_gi_instances
